@@ -110,7 +110,7 @@ names <- sub("Gyro","Gyroscope",names)
 names <- sub("sTimed","std",names)
 names <- sub("Mag","Magnitude",names)
 names(final_dataset) <- c("subject","activity_labels",names)
-write.csv(final_dataset,file = "final_dataset.csv")
+write.table(final_dataset,file = "final_dataset.txt",row.names = FALSE)
 head(as.data.frame(final_dataset),6)[,1:4]
 ```
 
