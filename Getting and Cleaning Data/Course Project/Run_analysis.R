@@ -45,4 +45,4 @@ names <- sub("sTimed","std",names)
 names <- sub("Mag","Magnitude",names)
 names(final_dataset) <- c("subject","activity_labels",names)
 ##Export the final dataset
-write.csv(final_dataset,file = "final_dataset.txt")
+write.table(final_dataset,file = "final_dataset.txt",row.names = FALSE)
