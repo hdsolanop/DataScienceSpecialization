@@ -1,0 +1,156 @@
+---
+title: "Statistical Inference Course Project Part 2"
+author: "Hernan Solano"
+date: "March 05 2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,fig.align = "center",out.width = '60%')
+```
+
+## Overview
+In this report, we will analyze the ToothGrowth data in the R datasets package. This data set will be explored to understand its structure using some exploratory visualizations, then some hypothesis tests will be performe in order to draw some conclusions.
+
+The description of the data set can be found here:
+<https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/ToothGrowth.html>
+
+
+```{r setting up}
+library(datasets)
+library(ggplot2)
+library(dplyr)
+library(tibble)
+library(ggthemes)
+dataset <- as.tibble(ToothGrowth)
+```
+
+## Summary of the data
+According to the datasets package description the tooth growth dataset shows measures of tooth length for 60 guinea pigs. They recieved one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) administrated by one of two delivery methods: orange juice (OJ) or vitamin C (VC). Therefore we have 3 variables:
+- len: a numeric measure of the tooth length
+- supp: a categoric/factor variable that indicates the supplement type OJ or VC
+- dose: a numeric variable indicating the level of vitamin C administrated in milligrams/day
+
+```{r summary}
+##General infor about the dataset
+str(dataset)
+
+```
+In the following lines one can find the summary statistics as well as the first and last rows of the dataset:
+```{r summary2}
+##Summary statistics of the variables
+summary(dataset)
+##First 10 rows of the dataset
+head(dataset)
+##Last 10 rows of the dataset
+tail(dataset)
+```
+In the following table count of the guinea pigs by any possible combination of the supplement and dose:
+```{r table}
+##Number of guinea pigs by combination of supplement and dose
+table(select(dataset,c("supp","dose")))
+```
+Now it is time for some visualizations:
+
+ - In this figure one can see clearly that the bigger the dose on vitamin C the , no matter what suplement is used the 
+```{r visualizations}
+g <- ggplot(data = dataset)
+##Point plot with linear tendenci lines
+g + geom_point(aes(x = dose,y=len,colour = supp)) + 
+    geom_smooth(aes(x = dose,y=len,colour = supp),method = "lm") + 
+    theme_economist() + 
+    labs(title = "Tendency lines and points for OJ and VC supplements",x = "Dose mg/day",
+         y = "Tooth length",colour= "Supplement")
+```
+- The figure bellow another exploratory visualization that makes me think, in complement with the figure above, that the Orange Juice supplement could yield to best results than the Vitamin C supplement.
+```{r visulizations2}
+g + geom_boxplot(aes(x = supp,y = len)) + theme_economist() +
+    labs(title = "Boxplot graphic with Length vs Supplement",y = "Tooth length",
+         x = "Supplement")
+```
+- The violin graph also show us some interesting shapes that makes think that the OJ gives better results than the VC.
+```{r visualizations3}
+g + geom_violin(aes(x=supp,y= len)) + theme_economist() + 
+    labs(title = "Violing graphic with Length vs Supplement", x = "Supplement",
+         y = "Tooth length")
+```
+- By running the same comparisons with the Length vs Dose graphs, one may think that with a higher dose longer teeth will be attained.
+```{r visulizations4}
+g + geom_boxplot(aes(x = as.factor(dose),y = len)) + theme_economist() + 
+    labs(title = "Boxplot graphic with Length vs Dose",y = "Tooth length",x = "Dose")
+```
+
+```{r visualizations5}
+g + geom_violin(aes(x= as.factor(dose),y= len)) + theme_economist() + 
+    labs(title = "Violing graphic with Length vs Dose", x = "Dose",
+         y = "Tooth length")
+```
+
+- To wrap up, so far we have this hypothesis to test:
+
+    - OJ supplement gives longer teeth than VC supplement does.
+    - The bigger the dose, the longer the teeth.
+
+##Hypothesis tests
+
+First, we are going to compare tooth growth by supplement, in order to do this we are going to perform a two sided, two sampled t test for the mean. In this case we are assuming different variances and our hypothesis could be stated as follow:
+
+- $H_{0}: \bar{X}_{OJ} =  \bar{X}_{VC}$
+- $H_{a}: \bar{X}_{OJ} \neq  \bar{X}_{VC}$ 
+```{r compare}
+test_supp <- t.test(data = dataset,len ~ supp,paired = FALSE, var.equal = FALSE)
+print(test_supp)
+```
+With this p-value equal to `r round(test_supp$p.value,4)` we fail to reject the null hypothesis at a 5% level of significance ($\alpha = 0.05$). Therefore, we can safely assume that the means are equivalent eventhough at first sight it does not seem like this.
+
+Now we are going to conduct 3 hypothesis tests, one for every combination of dose groups and length. The following code perform all the tests:
+
+```{r compare1}
+dose05 <- filter(dataset,dose == 0.5) %>% select(len)
+dose1 <- filter(dataset,dose == 1) %>% select(len)
+dose2 <- filter(dataset,dose == 2) %>% select(len)
+test_1_05 <- t.test(dose1- dose05,paired = FALSE, var.equal = FALSE,
+                    alternative = "greater")
+test_2_05 <- t.test(dose2- dose05,paired = FALSE, var.equal = FALSE,
+                    alternative = "greater")
+test_2_1 <- t.test(dose2 - dose1,paired = FALSE, var.equal = FALSE,
+                   alternative = "greater")
+```
+- Our first case is the hypothesis test of the dose of 1 mg/day and the 0.5 mg/day:
+    - $H_{0}: \bar{X}_{1} - \bar{X}_{0.5} < 0$
+    - $H_{a}: \bar{X}_{1} - \bar{X}_{0.5} > 0$ 
+    
+Note: we are assuming that the variances are different and that the guinea pigs are different.
+```{r compare3}
+print(test_1_05)
+```
+- The second case is the hypothesis test of the dose of 2 mg/day and the 0.5 mg/day:
+    - $H_{0}: \bar{X}_{2} - \bar{X}_{0.5} < 0$
+    - $H_{a}: \bar{X}_{2} - \bar{X}_{0.5} > 0$
+    
+Note: we are assuming that the variances are different and that the guinea pigs are different.
+```{r compare4}
+print(test_2_05)
+```
+
+- The third case is the hypothesis test of the dose of 2 mg/day and the 1 mg/day:
+    - $H_{0}: \bar{X}_{2} - \bar{X}_{1} < 0$
+    - $H_{a}: \bar{X}_{2} - \bar{X}_{1} > 0$ 
+    
+Note:we are assuming that the variances are different and that the guinea pigs are different.
+```{r compare5}
+print(test_2_1)
+```
+In this three cases the p-value was less than 0.05, therefore we are able reject all individual null hypothesis at a 5% level of significance ($\alpha = 0.05$). 
+
+Just to be sure, but I have to admit I do not know if this is used in this cases, I will use the bonferroni correction. So if a p-value calculated is less than `r round(0.05/3,3)`, it will be called significant so the null hypothesis will be rejected:
+```{r compare6}
+p_values <- c(test_1_05$p.value,test_2_05$p.value,test_2_1$p.value)
+##With the Bonferroni correction alpha_corrected = 0.017
+p_values < 0.017
+```
+
+##Conclusions
+To sum up I am assuming that the variances of the compared groups are different, also that I can use the Bonferroni correction in this case. With the analysis performed I can conclude the following:
+
+- There is no difference in the tooth length between the OJ and VC supplement groups, but there is enough evidence to support that a higher dose yields to a greater length of the guinea pigs' teeth.

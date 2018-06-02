@@ -1,0 +1,98 @@
+---
+title: "Regresion Models Course Project"
+author: "Hernan Solano"
+date: "19/5/2018"
+output: 
+  pdf_document: 
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(GGally)
+library(ggthemes)
+```
+
+# Executive Summary
+This is the final project for the Regression Models course of the Data Science Specialization. We are going to use the mtcars dataset from the default data of the R software in order to determing the relationship between the nature of the miles per galon (MPG) and the transmission or am variable (0 = automatic, 1 = manual) of a series of vehicles. We perform some Exploratory Data Analisis and then chose an appropiate regression model in order to quantify the difference of MPG of each transmission type.
+
+#Exploratory Data Analysis
+    
+    First, lets identify the variable types and how the table looks like:
+
+```{r cars}
+head(mtcars,3)
+```
+    Since our focus is on the mpg and am variables the following code shows their key measures:
+
+```{r summary1}
+round(summary(mtcars$mpg),2)
+round(summary(mtcars$am),2)
+```
+In this case, the range of the mpg variable is (10.4 - 33.9) and its standard deviation is: `r round(sd(mtcars$mpg),2)`. This is consistent with the figure 1 that shows the histogram of the mpg variable. On the other, the am variable only can take as values a 0 or a 1 and 41% of the cars have a manual transmission. 
+
+Furthermore, if we see figure 2, we can see that cars with a manual transmission might have a higher mean mpg value than the vehicules with an automatic transmision.
+
+#Regression Model
+We are going to use a linear regression model in order to identify the relationship between these two variables. Then, our outcome will be the mpg variable and the predictor will be the transmission variable as a factor. We add -1 to the model to avoid confussions with the coefficients.
+    
+```{r model}
+    fit <- lm(mpg ~as.factor(am)-1,data = mtcars)
+    summary(fit)
+    confint(fit)
+   
+   
+```
+According to the summary, none of the estimated coefficients is equal to 0 and the confidence intervals confirm it. We ploted the line on figure 3 so we can appreciate the increasing trend between automatic and manual transmisions. Additionally, if we look at the diagnosis plots in figure 4 there are 3 cars with high leverage in comparison with the others, these are: the Toyota Corolla, the Maserati Bora and the Ford Pantera L.
+
+We can also calculate the difference between the coefficients, that is:
+
+Manual transmition coefficient - automatic transmition coefficient
+
+`r round(fit$coeff[2],2)` - `r round(fit$coeff[1],2)` = `r round(fit$coeff[2] - fit$coeff[1],2)`
+
+We can also confirm this difference by running a t-test like this:
+
+```{r test}
+    test <- t.test(mpg ~as.factor(am),data = mtcars)
+    test$conf.int
+    test$estimate
+```
+This means that with a p-value of `r test$p.value` we can reject the null hypothesis and say that the mpg values of the 2 compared groups are different. We can conclude by saying that cars with manual transmissions have `r round(fit$coeff[2] - fit$coeff[1],2)` mpg more than cars with automatic transmissions.
+
+# Appendix
+
+##Figure 1
+
+This is the histogram of the mpg variable:
+```{r figure 1, fig.height=3, fig.width=4,fig.align='center'}
+    ggplot(data = mtcars,aes(x = mpg)) + geom_histogram(fill = "#014d64") + 
+    theme_economist() + labs(title = "Figure 1: Histogram of mpg")
+```
+
+##Figure 2
+
+This is a generalized Pairs Plot using ggpairs:
+```{r figure 2,fig.align='center'}
+    ggpairs(data = mtcars,columns = c("wt","am","mpg")) + 
+    labs( title = "Figure 2: Pairs Plot") +theme_economist()
+```
+
+##Figure 3
+
+This is a plot of the regression line modeled:
+```{r figure 3, fig.height=3, fig.width=4,fig.align='center'}
+    ggplot(data = mtcars,aes(x = am,y = mpg)) + geom_point()+geom_smooth(method = lm) + 
+    labs( title = "Figure 3: Regression line") + theme_economist()
+```
+
+##Figure 4
+
+Diagnosis plots:
+```{r figure 4,fig.height=5,fig.width=6,fig.align='center'}
+    par(mfrow = c(2,2))
+    plot(fit)
+```
