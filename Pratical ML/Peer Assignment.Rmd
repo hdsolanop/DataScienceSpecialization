@@ -1,0 +1,257 @@
+---
+title: "Practical ML Assignment"
+author: "Hernan Solano"
+date: "21/07/2018"
+output: html_document
+---
+
+```{r setup1, include=FALSE, cache=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/Github/DataScienceSpecialization/Pratical ML")
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv","pml-training.csv")
+download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", "pml-testing.csv")
+```
+
+# Executive Summary
+
+This is the peer assignment for the Practical Machine Learning course of the Data Science Specialization. We are going to use the Wearable Computing dataset. The objective is to use a supervised ML method to predict the "classe"" variable that correspond to one of the five positiones in which people do exercises: "A", "B", "C", "D" and "E". 
+
+
+```{r setup2,include=FALSE}
+library(tidyverse)
+library(caret)
+library(rattle)
+training <- read_csv("pml-training.csv", 
+    col_types = cols(amplitude_pitch_arm = col_double(), 
+        amplitude_pitch_belt = col_double(), 
+        amplitude_pitch_dumbbell = col_double(), 
+        amplitude_pitch_forearm = col_double(), 
+        amplitude_roll_arm = col_double(), 
+        amplitude_roll_belt = col_double(), 
+        amplitude_roll_dumbbell = col_double(), 
+        amplitude_roll_forearm = col_double(), 
+        amplitude_yaw_arm = col_double(), 
+        avg_pitch_arm = col_double(), avg_pitch_belt = col_double(), 
+        avg_pitch_dumbbell = col_double(), 
+        avg_pitch_forearm = col_double(), 
+        avg_roll_arm = col_double(), avg_roll_belt = col_double(), 
+        avg_roll_dumbbell = col_double(), 
+        avg_roll_forearm = col_double(), 
+        avg_yaw_arm = col_double(), avg_yaw_belt = col_double(), 
+        avg_yaw_dumbbell = col_double(), 
+        avg_yaw_forearm = col_double(), cvtd_timestamp = col_datetime(format = "%d/%m/%Y %H:%M"), 
+        kurtosis_picth_arm = col_double(), 
+        kurtosis_picth_belt = col_double(), 
+        kurtosis_roll_belt = col_double(), 
+        kurtosis_yaw_arm = col_double(), 
+        kurtosis_yaw_belt = col_double(), 
+        kurtosis_yaw_dumbbell = col_double(), 
+        kurtosis_yaw_forearm = col_double(), 
+        max_picth_arm = col_double(), max_picth_belt = col_double(), 
+        max_picth_dumbbell = col_double(), 
+        max_picth_forearm = col_double(), 
+        max_roll_arm = col_double(), max_roll_belt = col_double(), 
+        max_roll_dumbbell = col_double(), 
+        max_roll_forearm = col_double(), 
+        max_yaw_arm = col_double(), min_pitch_arm = col_double(), 
+        min_pitch_belt = col_double(), min_pitch_dumbbell = col_double(), 
+        min_pitch_forearm = col_double(), 
+        min_roll_arm = col_double(), min_roll_belt = col_double(), 
+        min_roll_dumbbell = col_double(), 
+        min_roll_forearm = col_double(), 
+        min_yaw_arm = col_double(), skewness_pitch_arm = col_double(), 
+        skewness_roll_belt.1 = col_double(), 
+        skewness_yaw_arm = col_double(), 
+        skewness_yaw_belt = col_double(), 
+        skewness_yaw_dumbbell = col_double(), 
+        skewness_yaw_forearm = col_double(), 
+        stddev_pitch_arm = col_double(), 
+        stddev_pitch_belt = col_double(), 
+        stddev_pitch_dumbbell = col_double(), 
+        stddev_pitch_forearm = col_double(), 
+        stddev_roll_arm = col_double(), stddev_roll_belt = col_double(), 
+        stddev_roll_dumbbell = col_double(), 
+        stddev_roll_forearm = col_double(), 
+        stddev_yaw_arm = col_double(), stddev_yaw_belt = col_double(), 
+        stddev_yaw_dumbbell = col_double(), 
+        stddev_yaw_forearm = col_double(), 
+        var_accel_arm = col_double(), var_accel_dumbbell = col_double(), 
+        var_accel_forearm = col_double(), 
+        var_pitch_arm = col_double(), var_pitch_belt = col_double(), 
+        var_pitch_dumbbell = col_double(), 
+        var_pitch_forearm = col_double(), 
+        var_roll_arm = col_double(), var_roll_belt = col_double(), 
+        var_roll_dumbbell = col_double(), 
+        var_roll_forearm = col_double(), 
+        var_total_accel_belt = col_double(), 
+        var_yaw_arm = col_double(), var_yaw_belt = col_double(), 
+        var_yaw_dumbbell = col_double(), 
+        var_yaw_forearm = col_double()), 
+    na = "0")
+
+testing  <- read_csv("pml-testing.csv", 
+    col_types = cols(amplitude_pitch_arm = col_double(), 
+        amplitude_pitch_belt = col_double(), 
+        amplitude_pitch_dumbbell = col_double(), 
+        amplitude_pitch_forearm = col_double(), 
+        amplitude_roll_arm = col_double(), 
+        amplitude_roll_belt = col_double(), 
+        amplitude_roll_dumbbell = col_double(), 
+        amplitude_roll_forearm = col_double(), 
+        amplitude_yaw_arm = col_double(), 
+        avg_pitch_arm = col_double(), avg_pitch_belt = col_double(), 
+        avg_pitch_dumbbell = col_double(), 
+        avg_pitch_forearm = col_double(), 
+        avg_roll_arm = col_double(), avg_roll_belt = col_double(), 
+        avg_roll_dumbbell = col_double(), 
+        avg_roll_forearm = col_double(), 
+        avg_yaw_arm = col_double(), avg_yaw_belt = col_double(), 
+        avg_yaw_dumbbell = col_double(), 
+        avg_yaw_forearm = col_double(), cvtd_timestamp = col_datetime(format = "%d/%m/%Y %H:%M"), 
+        kurtosis_picth_arm = col_double(), 
+        kurtosis_picth_belt = col_double(), 
+        kurtosis_roll_belt = col_double(), 
+        kurtosis_yaw_arm = col_double(), 
+        kurtosis_yaw_belt = col_double(), 
+        kurtosis_yaw_dumbbell = col_double(), 
+        kurtosis_yaw_forearm = col_double(), 
+        max_picth_arm = col_double(), max_picth_belt = col_double(), 
+        max_picth_dumbbell = col_double(), 
+        max_picth_forearm = col_double(), 
+        max_roll_arm = col_double(), max_roll_belt = col_double(), 
+        max_roll_dumbbell = col_double(), 
+        max_roll_forearm = col_double(), 
+        max_yaw_arm = col_double(), min_pitch_arm = col_double(), 
+        min_pitch_belt = col_double(), min_pitch_dumbbell = col_double(), 
+        min_pitch_forearm = col_double(), 
+        min_roll_arm = col_double(), min_roll_belt = col_double(), 
+        min_roll_dumbbell = col_double(), 
+        min_roll_forearm = col_double(), 
+        min_yaw_arm = col_double(), skewness_pitch_arm = col_double(), 
+        skewness_roll_belt.1 = col_double(), 
+        skewness_yaw_arm = col_double(), 
+        skewness_yaw_belt = col_double(), 
+        skewness_yaw_dumbbell = col_double(), 
+        skewness_yaw_forearm = col_double(), 
+        stddev_pitch_arm = col_double(), 
+        stddev_pitch_belt = col_double(), 
+        stddev_pitch_dumbbell = col_double(), 
+        stddev_pitch_forearm = col_double(), 
+        stddev_roll_arm = col_double(), stddev_roll_belt = col_double(), 
+        stddev_roll_dumbbell = col_double(), 
+        stddev_roll_forearm = col_double(), 
+        stddev_yaw_arm = col_double(), stddev_yaw_belt = col_double(), 
+        stddev_yaw_dumbbell = col_double(), 
+        stddev_yaw_forearm = col_double(), 
+        var_accel_arm = col_double(), var_accel_dumbbell = col_double(), 
+        var_accel_forearm = col_double(), 
+        var_pitch_arm = col_double(), var_pitch_belt = col_double(), 
+        var_pitch_dumbbell = col_double(), 
+        var_pitch_forearm = col_double(), 
+        var_roll_arm = col_double(), var_roll_belt = col_double(), 
+        var_roll_dumbbell = col_double(), 
+        var_roll_forearm = col_double(), 
+        var_total_accel_belt = col_double(), 
+        var_yaw_arm = col_double(), var_yaw_belt = col_double(), 
+        var_yaw_dumbbell = col_double(), 
+        var_yaw_forearm = col_double()), 
+    na = "0")
+
+
+```
+
+## Data Slicing
+
+I will be using the tidyverse and caret packages in order to propose a statistical model that predicts the Classe Variable. In order to validate the model we will have three datasets, a training dataset with a 5/4 cross validation strategy (model_train and model_test) and a provided testing dataset.
+
+In order to select the predictors to be included on the model I chose to ignore the covariates with near zero variance and also those with a mean absolute correlation higer than 0.9. For these steps I used the nearZeroVar and the findCorrelation functions respectively. I applied them to the training dataset (model_train) and as a result the following variables were not included in the model:
+
+```{r Data_slicing, include=FALSE}
+set.seed(20)
+inTrain <- createDataPartition(training$classe,p = .8,list = FALSE)
+#Create model-training dataset
+model_train <- training[inTrain,] %>% replace(.,is.na(.),0)
+#Separate model-training covariates
+model_train_covar <- select(model_train,-user_name, -cvtd_timestamp, -classe)
+#Select non near zero variance variables
+filter <- nearZeroVar(model_train_covar)
+#Show names of variables to eliminate
+variables <- names(model_train_covar)[filter]
+#Use findCorrelation to make a list of variables to ignore
+variables_corr <-findCorrelation(cor(select_if(model_train_covar,is.numeric)) %>% replace(.,is.na(.),0),cutoff = 0.7,names = TRUE,exact = TRUE)
+#Create a list of all covariates to ignore
+var <- sort(unique(union(variables_corr,variables)))
+#Final training dataset
+model_train <- select(model_train,-var)
+
+#Create model-testing dataset
+model_test <- training[-inTrain,] 
+#Filter model-test covariates
+model_test <- select(model_test,-var) %>% replace(.,is.na(.),0)
+
+#Filter testing covariates
+testing <- select(testing,-var) %>% replace(.,is.na(.),0)
+#Remove unnecesary elements in memory
+    rm(list = c("model_train_covar","inTrain","training","filter","variables","variables_corr"))
+```
+
+```{r Data_slicing2}
+var
+```
+
+##Model Training
+
+I tried different models, tree methods like rpart, but the best I could think of in terms of time of computing and accuracy was the linear discriminant analysis.
+
+###Training rpart
+
+The rpart method gives a 66% accuracy and with the help of the following confusion matrix we can see that only A and B cases are well classified.
+
+```{r Train_Rpart, cache=TRUE}
+rpart_fit <- train(classe ~., data = model_train,method = "rpart")
+rpart_train_prediction <- predict(rpart_fit,newdata =  model_train)
+confusionMatrix(rpart_train_prediction,as.factor(model_train$classe))
+```
+
+In terms of variables and the rules of this Tree and the Variable importance list, only the X1 variable was taken into account.
+
+```{r Treeplot}
+imp <- varImp(rpart_fit)$importance %>% mutate(var = row.names(.)) %>% arrange(desc(Overall)) %>% select(var,Overall) %>% filter(Overall > 10)
+imp
+fancyRpartPlot(rpart_fit$finalModel,roundint=FALSE)
+
+```
+###Training lda
+
+Here are the results of doing the lda training:
+
+```{r Train_lda,cache=TRUE}
+lda_fit <- train(classe ~., data = model_train,method = "lda")
+lda_train_prediction <- predict(lda_fit,newdata =  model_train)
+confusionMatrix(lda_train_prediction,as.factor(model_train$classe))
+
+```
+
+
+##Prediction
+
+
+```{r Prediction}
+lda_test_prediction <- predict(lda_fit,newdata = model_test)
+
+rpart_test_prediction <- predict(rpart_fit,newdata = model_test)
+
+```
+
+
+
+
+Note: This document is licensed under the Creative Commons license (CC BY-SA).
+
+##References
+
+The Dataset for this assigment commes from:
+
+Ugulino, W.; Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. Wearable Computing: Accelerometers' Data Classification of Body Postures and Movements. Proceedings of 21st Brazilian Symposium on Artificial Intelligence. Advances in Artificial Intelligence - SBIA 2012. In: Lecture Notes in Computer Science. , pp. 52-61. Curitiba, PR: Springer Berlin / Heidelberg, 2012. ISBN 978-3-642-34458-9. DOI: 10.1007/978-3-642-34459-6_6. 
+
+
