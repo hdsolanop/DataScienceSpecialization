@@ -207,10 +207,12 @@ I tried different models, tree methods like rpart, but the best I could think of
 
 The rpart method gives a 66% accuracy and with the help of the following confusion matrix we can see that only A and B cases are well classified.
 
-```{r Train_Rpart, cache=TRUE}
+```{r Train_Rpart, cache=TRUE,include=FALSE}
 rpart_fit <- train(classe ~., data = model_train,method = "rpart")
 rpart_train_prediction <- predict(rpart_fit,newdata =  model_train)
-confusionMatrix(rpart_train_prediction,as.factor(model_train$classe))
+```
+```{r ConfussionM rpart}
+confusionMatrix(rpart_train_prediction,as.factor(model_train$classe))$overall
 ```
 
 In terms of variables and the rules of this Tree and the Variable importance list, only the X1 variable was taken into account.
@@ -221,26 +223,28 @@ imp
 fancyRpartPlot(rpart_fit$finalModel,roundint=FALSE)
 
 ```
+
 ###Training lda
 
 Here are the results of doing the lda training:
 
-```{r Train_lda,cache=TRUE}
+```{r Train_lda,cache=TRUE,include=FALSE}
 lda_fit <- train(classe ~., data = model_train,method = "lda")
 lda_train_prediction <- predict(lda_fit,newdata =  model_train)
-confusionMatrix(lda_train_prediction,as.factor(model_train$classe))
-
 ```
 
+```{R CM lda}
+confusionMatrix(lda_train_prediction,as.factor(model_train$classe))$overall
+```
 
 ##Prediction
+
 
 
 ```{r Prediction}
 lda_test_prediction <- predict(lda_fit,newdata = model_test)
 
 rpart_test_prediction <- predict(rpart_fit,newdata = model_test)
-
 ```
 
 
