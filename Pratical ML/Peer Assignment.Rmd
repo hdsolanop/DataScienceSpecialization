@@ -164,6 +164,8 @@ testing  <- read_csv("pml-testing.csv",
 
 I will be using the tidyverse and caret packages in order to propose a statistical model that predicts the Classe Variable. In order to validate the model we will have three datasets, a training dataset with a 5/4 cross validation strategy (model_train and model_test) and a provided testing dataset.
 
+Note: All NAs were replace by 0 in order to facilitate the quantitative analysis.
+
 In order to select the predictors to be included on the model I chose to ignore the covariates with near zero variance and also those with a mean absolute correlation higer than 0.9. For these steps I used the nearZeroVar and the findCorrelation functions respectively. I applied them to the training dataset (model_train) and as a result the following variables were not included in the model:
 
 ```{r Data_slicing, include=FALSE}
@@ -205,14 +207,15 @@ I tried different models, tree methods like rpart, but the best I could think of
 
 ###Training rpart
 
-The rpart method gives a 66% accuracy and with the help of the following confusion matrix we can see that only A and B cases are well classified.
+The rpart method gives a 66.17% accuracy and with the help of the following confusion matrix we can see that only A and B cases are well classified.
 
 ```{r Train_Rpart, cache=TRUE,include=FALSE}
 rpart_fit <- train(classe ~., data = model_train,method = "rpart")
 rpart_train_prediction <- predict(rpart_fit,newdata =  model_train)
 ```
+
 ```{r ConfussionM rpart}
-confusionMatrix(rpart_train_prediction,as.factor(model_train$classe))$overall
+round(confusionMatrix(rpart_train_prediction,as.factor(model_train$classe))$overall,4)
 ```
 
 In terms of variables and the rules of this Tree and the Variable importance list, only the X1 variable was taken into account.
@@ -226,7 +229,7 @@ fancyRpartPlot(rpart_fit$finalModel,roundint=FALSE)
 
 ###Training lda
 
-Here are the results of doing the lda training:
+Here are the results of doing the lda training,we have a 100% accuracy with the training dataset.
 
 ```{r Train_lda,cache=TRUE,include=FALSE}
 lda_fit <- train(classe ~., data = model_train,method = "lda")
@@ -234,21 +237,33 @@ lda_train_prediction <- predict(lda_fit,newdata =  model_train)
 ```
 
 ```{R CM lda}
-confusionMatrix(lda_train_prediction,as.factor(model_train$classe))$overall
+round(confusionMatrix(lda_train_prediction,as.factor(model_train$classe))$overall,4)
 ```
 
 ##Prediction
 
+Finally with the prediction of the model_test dataset:
 
+In both cases we continue with the same accuracy levels:
 
-```{r Prediction}
-lda_test_prediction <- predict(lda_fit,newdata = model_test)
-
+```{r Prediction1}
 rpart_test_prediction <- predict(rpart_fit,newdata = model_test)
+round(confusionMatrix(rpart_test_prediction,as.factor(model_test$classe))$overall,4)
 ```
 
+```{r Prediction2}
+lda_test_prediction <- predict(lda_fit,newdata = model_test)
+round(confusionMatrix(lda_test_prediction,as.factor(model_test$classe))$overall,4)
+```
 
+Finnally if we do the same with the testing dataset we obtain the following, all the instances are clasified as being part of the A class no matter the model.
 
+```{r Prediction4}
+predict(rpart_fit,newdata = testing)
+predict(lda_fit,newdata = testing)
+```
+
+There is a danger of overfitting with the lda method that should be corrected by eliminating the correlated variables at the begining.
 
 Note: This document is licensed under the Creative Commons license (CC BY-SA).
 
