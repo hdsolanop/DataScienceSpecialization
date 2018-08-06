@@ -244,7 +244,7 @@ round(confusionMatrix(lda_train_prediction,as.factor(model_train$classe))$overal
 
 Finally with the prediction of the model_test dataset:
 
-In both cases we continue with the same accuracy levels:
+In both cases we continue with the same accuracy levels, therefore the out of sample error for the rpart is 34.83% (1-accuracy) and in the case of the lda is 0%.
 
 ```{r Prediction1}
 rpart_test_prediction <- predict(rpart_fit,newdata = model_test)
