@@ -1,0 +1,30 @@
+---
+title: "Leaflet Assignment"
+author: "Hernan Solano"
+date: "September 17th of 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(leaflet)
+library(readr)
+setwd("~/Github")
+```
+
+## Leaflet in R Markdown
+
+This R Markdown document has a marker at the location of each one of the states in the USA, additionally the marker's popup indicates the name of the state. You can get the data from: <https://www.kaggle.com/washimahmed/usa-latlong-for-state-abbreviations/version/1>.
+
+
+
+```{r cars}
+
+statelatlong <- read_csv("statelatlong.csv")
+statelatlong %>% 
+    leaflet() %>% 
+    addTiles() %>% 
+    addMarkers(clusterOptions = markerClusterOptions(),
+               popup = statelatlong$City)
+```
+

@@ -1,0 +1,40 @@
+---
+title: "Developing Data Products Presentation"
+author: "Hernan Solano"
+date: "October 13th 2018"
+output:
+  ioslides_presentation: default
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(plotly)
+data("mtcars")
+```
+
+## Introduction
+
+This is presentation corresponds to the third weeek's peer assignment for the course in Developing Data Products at Coursera. Using the Motor Trend Car Road Tests dataset from R, we are going to produce a 3D scatter plot using the plotly library.
+
+## Included variables
+For our 3D Scatter plot we are going to use the Miles/(US) gallon (mpg), Gross horsepower (hp) and Weight (wt) variables as the x, y and z axis respectively. In addition there will be a color scale indicating the number of cylinders (cyl) of each car.
+
+```{r mtcars}
+str(mtcars)
+```
+
+## Slide with Plot
+
+This slide contains a 3d scatter plot using the mtcars dataset as described earlier:
+```{r plot}
+p <- plot_ly(data = mtcars, x= ~mpg,y=~hp,z = ~wt, marker = list(color = ~cyl, colorscale = "Portland", showscale = TRUE), text = ~paste("Miles/(US) gallon:",mpg, "<br>Gross horsepower:", hp, "<br>Weight (1000 lbs):", wt, "<br>Number of cylinders:", cyl) ) %>% 
+    add_markers() %>% 
+    layout(scene = list(xaxis = list(title = "Miles/(US) gallon"),
+                        yaxis = list(title = "Gross horsepower"), 
+                                     zaxis = list(title = "Weight (1000 lbs)")
+                        )
+           )
+p
+```
+
